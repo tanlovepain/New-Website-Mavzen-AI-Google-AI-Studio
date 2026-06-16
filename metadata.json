@@ -1,0 +1,6 @@
+{
+  "name": "Mavzen AI",
+  "description": "AI Systems Consulting and Build. We design the architecture, then ship it inside your environment.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-mono: "Outfit", sans-serif;
+  
+  --tracking-tight: -0.02em;
+  --tracking-tighter: -0.04em;
+  
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-marquee: marquee 30s linear infinite;
+  --animate-marquee-forward: marquee-forward 35s linear infinite;
+  --animate-marquee-backward: marquee-backward 28s linear infinite;
+  
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes marquee-forward {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes marquee-backward {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0%); }
+  }
+}
+
+/* Prevent flash of wrong theme */
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+/* Force dark mode styles when .dark class is present */
+html.dark body {
+  background-color: #000;
+  color: #fafafa;
+}
+
+html.dark .dark\:bg-black {
+  background-color: #000 !important;
+}
+
+html.dark .dark\:text-zinc-100 {
+  color: #fafafa !important;
+}
+
+html.dark .dark\:bg-zinc-900 {
+  background-color: #18181b !important;
+}
+
+html.dark .dark\:bg-zinc-950 {
+  background-color: #09090b !important;
+}
+
+html.dark .dark\:text-zinc-400 {
+  color: #a1a1aa !important;
+}
+
+html.dark .dark\:border-zinc-900 {
+  border-color: #18181b !important;
+}
+
+html.dark .dark\:border-zinc-800 {
+  border-color: #27272a !important;
+}
+
+html.dark .dark\:text-white {
+  color: #fff !important;
+}
+
+html.dark .dark\:bg-zinc-950\/40 {
+  background-color: rgba(9, 9, 11, 0.4) !important;
+}
+
+html.dark .dark\:bg-zinc-950\/20 {
+  background-color: rgba(9, 9, 11, 0.2) !important;
+}
+
+html.dark .dark\:opacity-55 {
+  opacity: 0.55 !important;
+}
+
+/* Custom global styles for smooth theme transitions */
+html, body {
+  transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+  scroll-behavior: smooth;
+  font-family: var(--font-sans);
+}
+
+/* Ensure dark mode is applied to html element */
+html.dark {
+  color-scheme: dark;
+}
+
+/* Hide default scrollbar - replaced with top progress indicator */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* Gradients and specific card highlights matching screenshot glow */
+.card-neon-border {
+  position: relative;
+  border-radius: 0.75rem;
+}
+
+.card-neon-border::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.15) 0%, rgba(225, 29, 72, 0.0) 50%, rgba(79, 70, 229, 0.1) 100%);
+  border-radius: 0.75rem;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Interactive noise or grids corresponding to OperatorOS screenshots bg */
+.grid-lens-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(128, 128, 128, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(128, 128, 128, 0.08) 1px, transparent 1px);
+}
+
+.dark .grid-lens-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
