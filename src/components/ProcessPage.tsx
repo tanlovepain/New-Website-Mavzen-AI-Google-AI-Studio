@@ -147,14 +147,25 @@ export default function ProcessPage({ onOpenConsult }: { onOpenConsult: () => vo
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
       
       {/* 1. Header Section */}
-      <div className="text-center space-y-4 max-w-3xl mx-auto pt-4">
-        <h2 className="text-4xl sm:text-5xl md:text-6xl font-sans font-extrabold tracking-[-0.03em] text-zinc-950 dark:text-white leading-[1.05]">
+      <motion.div 
+        className="text-center space-y-6 max-w-4xl mx-auto pt-8 sm:pt-12"
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+      >
+        <motion.h1 
+          variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16,1,0.3,1] } } }}
+          className="text-5xl sm:text-6xl md:text-7xl font-sans font-extrabold tracking-[-0.04em] text-zinc-950 dark:text-white leading-[1.02]"
+        >
           How We Work
-        </h2>
-        <p className="text-base sm:text-lg text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-2xl mx-auto">
+        </motion.h1>
+        <motion.p 
+          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.16,1,0.3,1] } } }}
+          className="text-base sm:text-lg text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-2xl mx-auto"
+        >
           We don't do endless strategy slides. We build production-ready software directly inside your cloud accounts in weeks with a founder-friendly, structured path.
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
       {/* 2. Interactive Premium Timeline Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4 items-stretch">
@@ -278,7 +289,7 @@ export default function ProcessPage({ onOpenConsult }: { onOpenConsult: () => vo
                 </span>
                 <button
                   id={`process-blueprint-btn-${activeStep.id}`}
-                  onClick={onOpenConsult}
+                  onClick={() => window.open('https://calendly.com/mavzenai/30min', '_blank')}
                   className="w-full sm:w-auto px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                 >
                   <span>Start the Consult</span>
@@ -292,15 +303,21 @@ export default function ProcessPage({ onOpenConsult }: { onOpenConsult: () => vo
       </div>
 
       {/* 3. FAQ Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+      <motion.section 
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="text-center space-y-3 mb-16">
-          <h2 className="text-3xl font-display font-extrabold tracking-tighter text-zinc-900 dark:text-white">
+          <h2 className="text-4xl sm:text-5xl font-sans font-extrabold tracking-[-0.03em] text-zinc-900 dark:text-white">
             Frequently asked questions
           </h2>
         </div>
 
         <FAQSection items={PROCESS_FAQ_ITEMS} />
-      </section>
+      </motion.section>
 
     </div>
   );

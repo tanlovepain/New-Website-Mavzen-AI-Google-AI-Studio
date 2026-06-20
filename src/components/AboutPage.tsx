@@ -38,14 +38,25 @@ export default function AboutPage({ onOpenConsult }: { onOpenConsult: () => void
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
       
       {/* 1. Header & Intro */}
-      <div className="text-center space-y-4 max-w-3xl mx-auto pt-4">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-sans font-black tracking-[-0.03em] text-zinc-900 dark:text-white leading-[1.05] lg:whitespace-nowrap">
+      <motion.div 
+        className="text-center space-y-6 max-w-4xl mx-auto pt-8 sm:pt-12"
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+      >
+        <motion.h1 
+          variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16,1,0.3,1] } } }}
+          className="text-5xl sm:text-6xl md:text-7xl font-sans font-extrabold tracking-[-0.04em] text-zinc-950 dark:text-white leading-[1.02]"
+        >
           About Mavzen AI
-        </h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+        </motion.h1>
+        <motion.p 
+          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.16,1,0.3,1] } } }}
+          className="text-base sm:text-lg text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-2xl mx-auto"
+        >
           We are a principal A.I. systems architect and consulting team. We align corporate structures with agentic pipelines, build verified cloud codebases, and hand you total technical sovereignty.
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
       {/* 2. Philosophy Columns & Detailed Bio Block */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch pt-2">
@@ -118,12 +129,19 @@ export default function AboutPage({ onOpenConsult }: { onOpenConsult: () => void
       </div>
 
       {/* 3. Why Brands Choose Mavzen */}
-      <section id="why-brands-choose" className="space-y-10">
-        <div className="text-center space-y-3 max-w-3xl mx-auto">
-          <h3 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-zinc-950 dark:text-white">
+      <motion.section 
+        id="why-brands-choose" 
+        className="space-y-10 pt-10"
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div className="text-center space-y-4 max-w-3xl mx-auto">
+          <h3 className="font-sans text-4xl sm:text-5xl font-extrabold tracking-[-0.03em] text-zinc-950 dark:text-white">
             Why Leading Brands Choose Mavzen
           </h3>
-          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
             We don't sell pre-packaged subscriptions. We engineer bespoke operational software directly inside your cloud architecture.
           </p>
         </div>
@@ -195,15 +213,21 @@ export default function AboutPage({ onOpenConsult }: { onOpenConsult: () => void
           </div>
 
         </div>
-      </section>
+      </motion.section>
 
       {/* 3.5 Team / Experts Section */}
-      <section className="space-y-8 pt-4">
-        <div className="text-center space-y-2">
-          <span className="text-[9px] font-sans text-zinc-500 uppercase tracking-widest block">
+      <motion.section 
+        className="space-y-10 pt-16 pb-10"
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div className="text-center space-y-3 max-w-3xl mx-auto">
+          <span className="text-[10px] font-sans font-bold text-rose-500 uppercase tracking-widest block">
             THE MAVZEN TEAM
           </span>
-          <h3 className="font-sans text-3xl font-[800] tracking-[-0.03em] text-zinc-950 dark:text-white">
+          <h3 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] text-zinc-950 dark:text-white">
             The Minds Behind Scale
           </h3>
         </div>
@@ -251,7 +275,7 @@ export default function AboutPage({ onOpenConsult }: { onOpenConsult: () => void
             </div>
           ))}
         </div>
-      </section>
+      </motion.section>
 
     </div>
   );

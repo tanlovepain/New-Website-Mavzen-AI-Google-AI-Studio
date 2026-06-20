@@ -1,400 +1,549 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { 
-  Shield, HelpCircle, ArrowRight, Zap, Target, Users, Code, RefreshCw, BarChart3, TrendingUp, Check, X
+  ArrowRight, Check, X, Minus
 } from 'lucide-react';
 
-interface ComparisonRow {
-  aspect: string;
-  traditional: { title: string; desc: string; bad: boolean };
-  mavzen: { title: string; desc: string; good: boolean };
+const USD_TO_INR = 84;
+
+interface ComparisonFeature {
+  label: string;
+  mavzen: 'yes' | 'no' | 'partial';
+  agency: 'yes' | 'no' | 'partial';
+  saas: 'yes' | 'no' | 'partial';
+  inhouse: 'yes' | 'no' | 'partial';
 }
 
-export default function WhyMavzenPage({ onOpenConsult }: { onOpenConsult: () => void }) {
-  // ROI Calculator states
-  const [dailyOrders, setDailyOrders] = useState<number>(150);
-  const [hourlyRate, setHourlyRate] = useState<number>(25);
+const COMPARISON_FEATURES: ComparisonFeature[] = [
+  { label: 'You own the code permanently', mavzen: 'yes', agency: 'no', saas: 'no', inhouse: 'yes' },
+  { label: 'Built inside your own cloud accounts', mavzen: 'yes', agency: 'no', saas: 'no', inhouse: 'yes' },
+  { label: 'No ongoing platform or seat fees', mavzen: 'yes', agency: 'no', saas: 'no', inhouse: 'yes' },
+  { label: 'Custom-built for your specific workflows', mavzen: 'yes', agency: 'partial', saas: 'no', inhouse: 'yes' },
+  { label: 'Deployed within weeks, not months', mavzen: 'yes', agency: 'no', saas: 'yes', inhouse: 'no' },
+  { label: 'No recurring retainer or subscription', mavzen: 'yes', agency: 'no', saas: 'no', inhouse: 'partial' },
+  { label: 'Your team is trained to maintain it', mavzen: 'yes', agency: 'no', saas: 'no', inhouse: 'yes' },
+  { label: 'Works with Shopify, Klaviyo, WhatsApp', mavzen: 'yes', agency: 'partial', saas: 'partial', inhouse: 'partial' },
+  { label: 'Fixed, transparent project pricing', mavzen: 'yes', agency: 'no', saas: 'no', inhouse: 'no' },
+];
 
-  const calculateROI = () => {
-    const supportTicketsPerDay = dailyOrders * 0.15; // 15% ticket rate
-    const monthlyTickets = supportTicketsPerDay * 30;
-    const hoursSavedPerMonth = (monthlyTickets * 8) / 60; // 8 mins per ticket saved
-    const manualCostSaved = Math.round(hoursSavedPerMonth * hourlyRate);
-    
-    // Abandoned carts (typically 70% of total checkouts, so dailyOrders is 30% of total carts, abandoned is 70/30 of daily orders)
-    const abandonedCartsPerMonth = dailyOrders * (70 / 30) * 30;
-    const cartRecoveryRate = 0.08; // 8% recovery with WhatsApp/Email AI
-    const avgOrderValue = 85; // $85 average order value
-    const revenueRecovered = Math.round(abandonedCartsPerMonth * cartRecoveryRate * avgOrderValue);
-    
-    const scaleFactor = Math.min(1.5, Math.max(0.5, dailyOrders / 150));
-    const softwareSubscriptionFeesSaved = Math.round(1850 * scaleFactor);
-    const totalImpact = manualCostSaved + revenueRecovered + softwareSubscriptionFeesSaved;
+function StatusIcon({ status }: { status: 'yes' | 'no' | 'partial' }) {
+  if (status === 'yes') {
+    return (
+      <div className="flex items-center justify-center mx-auto">
+        <Check size={18} className="text-[#3b82f6] stroke-[2.5]" />
+      </div>
+    );
+  }
+  if (status === 'no') {
+    return (
+      <div className="flex items-center justify-center mx-auto">
+        <X size={18} className="text-[#ef4444] stroke-[2]" />
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center justify-center mx-auto">
+      <Minus size={18} className="text-[#eab308] stroke-[2.5]" />
+    </div>
+  );
+}
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  visible: (delay = 0) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1], delay }
+  })
+};
+
+export default function WhyMavzenPage({ onOpenConsult }: { onOpenConsult: () => void }) {
+  // Currency
+  const [currency, setCurrency] = useState<'USD' | 'INR'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('mavzen-currency');
+      return (saved === 'INR' ? 'INR' : 'USD');
+    }
+    return 'USD';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mavzen-currency', currency);
+  }, [currency]);
+
+  const fmt = (usdValue: number) => {
+    if (currency === 'INR') {
+      const inr = Math.round(usdValue * USD_TO_INR);
+      return '₹' + inr.toLocaleString('en-IN');
+    }
+    return '$' + usdValue.toLocaleString();
+  };
+
+  // Calculator - Operational Impact Estimator
+  const [monthlyOrders, setMonthlyOrders] = useState<number>(1500);
+  const [questionsPerDay, setQuestionsPerDay] = useState<number>(50);
+  const [avgOrderValue, setAvgOrderValue] = useState<number>(85);
+  const [supportTeamSize, setSupportTeamSize] = useState<number>(3);
+  const [founderHoursWeekly, setFounderHoursWeekly] = useState<number>(15);
+
+  const calculateImpact = () => {
+    // Support Hours Saved
+    // Assume 5 minutes per question, automation handles 70%
+    const questionsPerMonth = questionsPerDay * 30;
+    const automatedQuestions = questionsPerMonth * 0.7;
+    const supportHoursSaved = Math.round((automatedQuestions * 5) / 60);
+
+    // Founder Time Recovered
+    // Operations automation recovers 40% of founder's operational time
+    const founderHoursMonthly = founderHoursWeekly * 4;
+    const founderTimeRecovered = Math.round(founderHoursMonthly * 0.4);
+
+    // Potential Cart Recovery
+    // 5% of orders abandon, 15% recoverable via follow-up
+    const abandonedCarts = monthlyOrders * 0.05;
+    const recoveredCarts = abandonedCarts * 0.15;
+    const cartRecoveryRevenue = Math.round(recoveredCarts * avgOrderValue);
+
+    // Hiring Delayed
+    // Each support person handles ~500 questions/month
+    const questionsHandledPerSupport = 500;
+    const supportCapacityNeeded = Math.ceil(questionsPerMonth / questionsHandledPerSupport);
+    const currentCapacity = supportTeamSize;
+    const additionalCapacityNeeded = Math.max(0, supportCapacityNeeded - currentCapacity);
+    const hiringDelayed = additionalCapacityNeeded > 0.5 ? 1 : 0;
 
     return {
-      tickets: Math.round(monthlyTickets),
-      hoursSaved: Math.round(hoursSavedPerMonth),
-      manualSaved: manualCostSaved,
-      recoveredCartRevenue: revenueRecovered,
-      saasSaved: softwareSubscriptionFeesSaved,
-      totalImpact: totalImpact,
+      supportHoursSaved,
+      founderTimeRecovered,
+      cartRecoveryRevenue,
+      hiringDelayed,
+      totalHoursRecovered: supportHoursSaved + founderTimeRecovered,
     };
   };
 
-  const stats = calculateROI();
-
-  const comparisonData: ComparisonRow[] = [
-    {
-      aspect: "Sovereignty & Code Ownership",
-      traditional: { 
-        title: "Traditional Agencies (SaaS lock-in)", 
-        desc: "Build rules inside proprietary agency platforms. If you stop paying their expensive retainer or SaaS subscription, your systems immediately stop working.", 
-        bad: true 
-      },
-      mavzen: { 
-        title: "Mavzen Sovereign Operating System", 
-        desc: "We write production-grade Express/TypeScript software and deploy standard container images in your own cloud accounts (AWS/GCP). You own 100% of the code forever. Zero ongoing seat fees.", 
-        good: true 
-      }
-    },
-    {
-      aspect: "Data Movement & Coordination",
-      traditional: { 
-        title: "Disconnected Automation & Zapier", 
-        desc: "Dozens of brittle, fragile Zaps trying to map Shopify events to Klaviyo. Frequent API schema breaks, silent task failures, and expensive transaction volume billing.", 
-        bad: true 
-      },
-      mavzen: { 
-        title: "Unified Operating Infrastructure", 
-        desc: "A cohesive, host-locked data layer where events flow directly between your Shopify orders, CRM pipelines, and automated WhatsApp responders without third-party middleware limits.", 
-        good: true 
-      }
-    },
-    {
-      aspect: "Operations Coverage",
-      traditional: { 
-        title: "Manual Headcount & 9-to-5 Staff", 
-        desc: "Customer service departments and recovery coordinators typing replies manually. High error rates, customer friction during weekends, and hours of response lag.", 
-        bad: true 
-      },
-      mavzen: { 
-        title: "Sub-Second Autopilot Engine", 
-        desc: "AI systems reply to inquiries, send abandoned card discount alerts, and reconcile invoices in under 800 milliseconds. 100% accurate, running 24/7/365 with perfect deterministic guardrails.", 
-        good: true 
-      }
-    },
-    {
-      aspect: "Organizational Scalability",
-      traditional: { 
-        title: "Hiring Internal Developers & Onboarding", 
-        desc: "Months spent sourcing, interviewing, and training software staff. High salary overhead, equity demands, benefits packages, and product knowledge churn risks.", 
-        bad: true 
-      },
-      mavzen: { 
-        title: "Specialized On-Demand Team", 
-        desc: "One structured upfront scope. We assign the top 1% of backend developers explicitly matched to your stack, ship your fully-tested system in weeks, and train your current staff to maintain it.", 
-        good: true 
-      }
-    },
-    {
-      aspect: "Investment & Billing Architecture",
-      traditional: { 
-        title: "Hourly Retainers & Vague Billing", 
-        desc: "Vague 'consulting hours' bills with no direct link to actual business performance. Software development pipelines that drag on for quarters without launching.", 
-        bad: true 
-      },
-      mavzen: { 
-        title: "One-Time Fixed Capital Expenditure", 
-        desc: "A clear, capped budget. We align directly on business-level deliverables (e.g. WhatsApp Cart recovery running at a tested milestone cost) with a guaranteed launch date.", 
-        good: true 
-      }
-    }
-  ];
+  const impact = calculateImpact();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
-      
-      {/* 1. Header Section */}
-      <div className="text-center space-y-4 max-w-3xl mx-auto pt-4">
-        <h2 className="text-4xl sm:text-5xl md:text-6xl font-sans font-extrabold tracking-[-0.03em] text-zinc-950 dark:text-white leading-[1.05]">
-          AI Operating System <br />
-          <span className="text-sky-500">Built for Modern D2C Brands</span>
-        </h2>
-        <p className="text-base sm:text-lg text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-2xl mx-auto">
-          Mavzen builds custom AI infrastructure that automates critical operations, reduces costs, and increases efficiency.
-        </p>
-      </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-28 pb-20">
 
-      {/* 2. Key Paradigm Shifts (Comparison Bento Grid) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Card 1: Traditional Agency vs Mavzen OS */}
-        <div className="bg-zinc-50 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-900 p-6 rounded-2xl flex flex-col justify-between space-y-6 relative group overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <div className="space-y-4 relative z-10">
-            <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl w-fit">
-              <Zap size={20} />
-            </div>
-            <h3 className="text-lg font-sans font-[800] text-zinc-900 dark:text-white">
-              Traditional Agency vs. Mavzen Infrastructure
-            </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              Agencies lease you generic subscriptions on proprietary software, billing you indefinitely for minor revisions. Mavzen writes custom-tailored system containers that are deployed directly into your own AWS or GCP environment. You hold the keys, license-free, forever.
-            </p>
-          </div>
-          <div className="border-t border-zinc-200/60 dark:border-zinc-900/80 pt-4 flex items-center justify-between text-[11px] font-sans text-sky-500 relative z-10 font-bold">
-            <span>Sovereign Code Custody</span>
-            <span>➔</span>
-          </div>
-        </div>
+      {/* ── HERO ── */}
+      <motion.div
+        className="text-center space-y-6 max-w-4xl mx-auto pt-8"
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
+      >
+        <motion.h1
+          variants={fadeUp}
+          custom={0}
+          className="text-5xl sm:text-6xl md:text-7xl font-sans font-extrabold tracking-[-0.04em] text-zinc-950 dark:text-white leading-[1.02]"
+        >
+          Not another agency.<br />
+          <span className="text-zinc-400 dark:text-zinc-500">Not another platform.</span>
+        </motion.h1>
+        <motion.p
+          variants={fadeUp}
+          custom={0.1}
+          className="text-base sm:text-lg text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-2xl mx-auto"
+        >
+          Most D2C brands scale by adding more tools and more people. We take a different approach — Mavzen builds custom AI infrastructure that automates what slows you down, so your team can focus on growth.
+        </motion.p>
+      </motion.div>
 
-        {/* Card 2: Manual Operations vs Autopilot OS */}
-        <div className="bg-zinc-50 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-900 p-6 rounded-2xl flex flex-col justify-between space-y-6 relative group overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <div className="space-y-4 relative z-10">
-            <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl w-fit">
-              <Target size={20} />
-            </div>
-            <h3 className="text-lg font-sans font-[800] text-zinc-900 dark:text-white">
-              Manual Labors vs. Autopilot Infrastructure
-            </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              Stop forcing staff to copy metrics, answer standard shipping alerts, and dispatch invoices manually. Our platform unifies WhatsApp dialogs, CRM states, and invoice creation into automated systems executing in under 800ms.
-            </p>
-          </div>
-          <div className="border-t border-zinc-200/60 dark:border-zinc-900/80 pt-4 flex items-center justify-between text-[11px] font-sans text-sky-500 relative z-10 font-bold">
-            <span>Deterministic Workflow Speeds</span>
-            <span>➔</span>
-          </div>
-        </div>
-
-        {/* Card 3: Fragmented Software vs Coherent OS */}
-        <div className="bg-zinc-50 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-900 p-6 rounded-2xl flex flex-col justify-between space-y-6 relative group overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <div className="space-y-4 relative z-10">
-            <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl w-fit">
-              <RefreshCw size={20} />
-            </div>
-            <h3 className="text-lg font-sans font-[800] text-zinc-900 dark:text-white">
-              Brittle Middleware vs. Unified OS Channels
-            </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              When software relies on 15 nested Zapier actions, your brand faces continuous pipeline breakages. Mavzen constructs highly integrated data pipelines, ensuring your customer records, order receipts, and WhatsApp interactions communicate natively.
-            </p>
-          </div>
-          <div className="border-t border-zinc-200/60 dark:border-zinc-900/80 pt-4 flex items-center justify-between text-[11px] font-sans text-sky-500 relative z-10 font-bold">
-            <span>Unified Execution Pipelines</span>
-            <span>➔</span>
-          </div>
-        </div>
-
-      </div>
-
-      {/* 3. Deep-Dive Comparison (Paradigm Shift Cards) */}
-      <div className="space-y-12">
-        <div className="text-center space-y-3 max-w-xl mx-auto">
-          <h3 className="text-2xl sm:text-4xl font-sans font-[800] tracking-[-0.02em] text-zinc-950 dark:text-white">
-            How We Differ From Legacy Options
-          </h3>
-          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-450 leading-relaxed font-sans max-w-md mx-auto">
-            A granular comparison of traditional agency workflows and pre-packaged subscriptions against our private sovereign operating systems.
+      {/* ── COMPARISON TABLE ── */}
+      <motion.div
+        className="space-y-8"
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div className="text-center space-y-3">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-extrabold tracking-[-0.03em] text-zinc-950 dark:text-white">
+            Compare your options
+          </h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-lg mx-auto">
+            See exactly how Mavzen compares to traditional agencies, SaaS platforms, and building in-house.
           </p>
         </div>
 
-        <div className="space-y-6 max-w-5xl mx-auto">
-          {comparisonData.map((row, idx) => (
-            <div
-              key={idx}
-              className="bg-white/40 dark:bg-zinc-950/40 backdrop-blur-md border border-zinc-200/60 dark:border-zinc-900/60 p-6 rounded-3xl relative overflow-hidden transition-all duration-300 hover:border-zinc-350 dark:hover:border-zinc-800 space-y-4 shadow-sm"
-            >
-              {/* Header Dimension Title */}
-              <div className="flex items-center gap-3 border-b border-zinc-150 dark:border-zinc-900/60 pb-3">
-                <div className="h-6 w-6 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-500 text-[10px] sm:text-[11px] font-sans font-bold">
-                  0{idx + 1}
-                </div>
-                <h4 className="text-sm font-sans font-[800] text-zinc-800 dark:text-zinc-100 tracking-tight">
-                  {row.aspect}
-                </h4>
-              </div>
-
-              {/* Side-by-Side Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                {/* Legacy Column */}
-                <div className="bg-zinc-50/50 dark:bg-zinc-900/20 p-5 rounded-2xl border border-zinc-150/60 dark:border-zinc-900/30 flex flex-col justify-between space-y-3 relative group">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <X size={14} className="text-rose-500 shrink-0 stroke-[2.5]" />
-                      <span className="text-[11px] font-sans text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
-                        Legacy Traditional Approach
-                      </span>
+        <div className="overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-900 shadow-sm">
+          <table className="w-full min-w-[800px]">
+            <thead>
+              <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                <th className="text-left text-xs font-sans text-zinc-400 uppercase tracking-wider px-6 py-5 w-[35%] bg-white dark:bg-zinc-950">
+                  Feature
+                </th>
+                {/* Mavzen — highlighted */}
+                <th className="text-center px-5 py-6 bg-[#0B1221] w-[20%]">
+                  <div className="space-y-1.5">
+                    <div className="w-6 h-6 mx-auto bg-blue-500/10 rounded-full flex items-center justify-center mb-2">
+                       <div className="w-3 h-3 bg-[#3b82f6] rounded-full opacity-80 mix-blend-screen blur-[1px]"></div>
                     </div>
-                    <p className="text-xs font-sans font-bold text-zinc-900 dark:text-white leading-tight">
-                      {row.traditional.title}
-                    </p>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-450 leading-relaxed font-sans">
-                      {row.traditional.desc}
-                    </p>
+                    <div className="text-[#3b82f6] font-bold text-[15px]">Mavzen AI</div>
+                    <div className="text-[11px] text-zinc-400 font-medium tracking-wide">AI Systems Architect-led</div>
                   </div>
-                </div>
-
-                {/* Mavzen OS Column */}
-                <div className="bg-sky-500/5 dark:bg-sky-950/10 p-5 rounded-2xl border border-sky-500/20 dark:border-sky-500/10 flex flex-col justify-between space-y-3 relative overflow-hidden ring-1 ring-sky-500/5">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-sky-500/5 blur-[50px] pointer-events-none" />
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Check size={14} className="text-emerald-500 shrink-0 stroke-[3]" />
-                      <span className="text-[11px] font-sans text-sky-500 dark:text-sky-400 font-bold uppercase tracking-wider">
-                        Mavzen Operating System
-                      </span>
+                </th>
+                <th className="text-center px-5 py-6 bg-zinc-950 w-[18%]">
+                  <div className="space-y-1.5">
+                    <div className="w-6 h-6 mx-auto flex items-center justify-center mb-2">
+                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-zinc-500"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
                     </div>
-                    <p className="text-xs font-sans font-bold text-sky-600 dark:text-white leading-tight">
-                      {row.mavzen.title}
-                    </p>
-                    <p className="text-[11px] text-zinc-600 dark:text-zinc-355 leading-relaxed font-sans">
-                      {row.mavzen.desc}
-                    </p>
+                    <div className="text-zinc-200 font-bold text-[15px]">Typical Agency</div>
+                    <div className="text-[11px] text-zinc-500 font-medium tracking-wide">Generic dev shop</div>
                   </div>
-                </div>
-              </div>
-            </div>
-          ))}
+                </th>
+                <th className="text-center px-5 py-6 bg-zinc-950 w-[17%]">
+                  <div className="space-y-1.5">
+                    <div className="w-6 h-6 mx-auto flex items-center justify-center mb-2">
+                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-zinc-500"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                    </div>
+                    <div className="text-zinc-200 font-bold text-[15px]">SaaS Platform</div>
+                    <div className="text-[11px] text-zinc-500 font-medium tracking-wide">Off-the-shelf tools</div>
+                  </div>
+                </th>
+                <th className="text-center px-5 py-6 bg-zinc-950 w-[10%]">
+                  <div className="space-y-1.5">
+                    <div className="w-6 h-6 mx-auto flex items-center justify-center mb-2">
+                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-zinc-500"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <div className="text-zinc-200 font-bold text-[14px] leading-tight">DIY / In-House</div>
+                    <div className="text-[10px] text-zinc-500 font-medium tracking-wide leading-tight">Build it yourself</div>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARISON_FEATURES.map((row, idx) => (
+                <tr
+                  key={idx}
+                  className="border-b border-zinc-900/60 last:border-0 bg-transparent hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30 transition-colors"
+                >
+                  <td className="px-6 py-5 text-[14px] font-medium text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed">
+                    {row.label}
+                  </td>
+                  {/* Mavzen highlighted */}
+                  <td className="px-5 py-5 text-center bg-[#0B1221]">
+                    <StatusIcon status={row.mavzen} />
+                  </td>
+                  <td className="px-5 py-5 text-center bg-zinc-950">
+                    <StatusIcon status={row.agency} />
+                  </td>
+                  <td className="px-5 py-5 text-center bg-zinc-950">
+                    <StatusIcon status={row.saas} />
+                  </td>
+                  <td className="px-5 py-5 text-center bg-zinc-950">
+                    <StatusIcon status={row.inhouse} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </motion.div>
 
-      {/* 4. Interactive ROI Metric Impact Sandbox */}
-      <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900/80 p-6 sm:p-10 rounded-3xl relative overflow-hidden">
+      {/* ── OPERATIONAL IMPACT ESTIMATOR ── */}
+      <motion.div
+        className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900/80 p-8 sm:p-12 rounded-3xl relative overflow-hidden"
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="absolute inset-0 grid-lens-pattern opacity-[0.04] pointer-events-none" />
-        <div className="absolute top-[-200px] left-[-200px] w-96 h-96 rounded-full bg-sky-500/5 blur-[120px] pointer-events-none" />
+        <div className="absolute top-[-200px] left-[-200px] w-96 h-96 rounded-full bg-rose-500/5 blur-[120px] pointer-events-none" />
 
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          
-          {/* Left panel: sliders */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="space-y-3">
-              <span className="text-[9px] font-sans px-2.5 py-1 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-md tracking-wider uppercase inline-block">
-                ROI PROJECTION CALIBRATION
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-sans font-[800] text-zinc-950 dark:text-white leading-tight">
-                Simulate Your Infrastructure ROI
-              </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Adjust your brand's operational metrics to review estimated monthly manual cost savings and recovered checkout revenue.
+        <div className="relative z-10">
+          {/* Header row */}
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
+            <div className="space-y-2">
+              <h2 className="text-3xl sm:text-4xl font-sans font-extrabold tracking-[-0.03em] text-zinc-950 dark:text-white">
+                What Could Your Team Stop Spending Time On?
+              </h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-lg">
+                Estimate how much time, effort, and operational workload could be removed from your business each month.
               </p>
             </div>
 
-            {/* Slider 1: Daily Orders */}
-            <div className="space-y-2.5">
-              <div className="flex justify-between items-center">
-                <span className="text-[11px] font-sans text-zinc-400 uppercase">Average Daily Orders</span>
-                <span className="text-xs font-semibold px-2 py-0.5 bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 rounded border border-zinc-200 dark:border-zinc-800">
-                  {dailyOrders} orders/day
-                </span>
-              </div>
-              <input 
-                id="slider-roi-orders"
-                type="range" 
-                min="20" 
-                max="1000" 
-                value={dailyOrders} 
-                onChange={(e) => setDailyOrders(Number(e.target.value))}
-                className="w-full accent-sky-500 cursor-pointer h-1 bg-zinc-200 dark:bg-zinc-900 rounded-lg"
-              />
-            </div>
-
-            {/* Slider 2: Labor Hourly Rate */}
-            <div className="space-y-2.5">
-              <div className="flex justify-between items-center">
-                <span className="text-[11px] font-sans text-zinc-400 uppercase">CS / Tech Labor Rate</span>
-                <span className="text-xs font-semibold px-2 py-0.5 bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 rounded border border-zinc-200 dark:border-zinc-800">
-                  ${hourlyRate}/hour
-                </span>
-              </div>
-              <input 
-                id="slider-roi-labor"
-                type="range" 
-                min="15" 
-                max="60" 
-                value={hourlyRate} 
-                onChange={(e) => setHourlyRate(Number(e.target.value))}
-                className="w-full accent-sky-500 cursor-pointer h-1 bg-zinc-200 dark:bg-zinc-900 rounded-lg"
-              />
-            </div>
-
-            <div className="p-4 bg-zinc-100/45 dark:bg-[#121215] border border-zinc-200/50 dark:border-zinc-900 rounded-xl text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              Our simulation assumes a standard average order value of <strong>$85</strong>, a <strong>15%</strong> support ticketing rate (CS tickets), and a target recurring SaaS license subscription baseline software fee.
+            {/* Currency Toggle */}
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1 shrink-0 self-start sm:self-auto">
+              {(['USD', 'INR'] as const).map((cur) => (
+                <button
+                  key={cur}
+                  onClick={() => setCurrency(cur)}
+                  className={`currency-pill px-4 py-2 rounded-lg text-xs font-bold tracking-wide transition-all ${
+                    currency === cur
+                      ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
+                  }`}
+                >
+                  {cur === 'USD' ? '$ USD' : '₹ INR'}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Right panel: projection output */}
-          <div className="lg:col-span-7 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-900/80 p-6 rounded-2xl flex flex-col justify-between space-y-6">
-            <h4 className="text-xs font-sans text-zinc-400 border-b border-zinc-200 dark:border-zinc-900 pb-3 uppercase flex justify-between items-center">
-              <span>PROJECTED MONTHLY VALUE LIFT</span>
-              <span className="inline-flex h-2 w-2 rounded-full bg-sky-500 animate-pulse" />
-            </h4>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            {/* Left: Inputs */}
+            <div className="lg:col-span-5 space-y-7">
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              
-              <div className="space-y-1">
-                <span className="text-[10px] font-sans text-zinc-400 dark:text-zinc-500 block uppercase">CS Labor Cost Saved</span>
-                <span className="text-xl sm:text-2xl font-sans font-[800] text-zinc-950 dark:text-white block">
-                  ${stats.manualSaved.toLocaleString()}
-                </span>
-                <span className="text-[10px] font-sans text-zinc-450 dark:text-zinc-500 mt-1 block">
-                  {stats.hoursSaved} hrs support work cut
-                </span>
+              {/* Input 1: Monthly Orders */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                    Monthly Orders
+                  </label>
+                  <span className="text-sm font-bold px-3 py-1 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-lg border border-zinc-200 dark:border-zinc-800">
+                    {monthlyOrders.toLocaleString()}
+                  </span>
+                </div>
+                <input
+                  id="input-monthly-orders"
+                  type="range"
+                  min="100"
+                  max="50000"
+                  step="100"
+                  value={monthlyOrders}
+                  onChange={(e) => setMonthlyOrders(Number(e.target.value))}
+                  className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2"
+                  style={{ accentColor: '#c20a26' }}
+                />
+                <div className="flex justify-between text-[11px] text-zinc-400">
+                  <span>100</span>
+                  <span>50,000</span>
+                </div>
               </div>
 
-              <div className="space-y-1">
-                <span className="text-[10px] font-sans text-zinc-400 dark:text-zinc-500 block uppercase">Cart Revenue Saved</span>
-                <span className="text-xl sm:text-2xl font-sans font-[800] text-zinc-950 dark:text-white block">
-                  ${stats.recoveredCartRevenue.toLocaleString()}
-                </span>
-                <span className="text-[10px] font-sans text-zinc-450 dark:text-zinc-500 mt-1 block">
-                  8% recovered via WhatsApp
-                </span>
+              {/* Input 2: Customer Questions Per Day */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                    Customer Questions Per Day
+                  </label>
+                  <span className="text-sm font-bold px-3 py-1 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-lg border border-zinc-200 dark:border-zinc-800">
+                    {questionsPerDay}
+                  </span>
+                </div>
+                <input
+                  id="input-questions-per-day"
+                  type="range"
+                  min="10"
+                  max="1000"
+                  step="10"
+                  value={questionsPerDay}
+                  onChange={(e) => setQuestionsPerDay(Number(e.target.value))}
+                  className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2"
+                  style={{ accentColor: '#c20a26' }}
+                />
+                <div className="flex justify-between text-[11px] text-zinc-400">
+                  <span>10</span>
+                  <span>1,000</span>
+                </div>
               </div>
 
-              <div className="space-y-1">
-                <span className="text-[10px] font-sans text-zinc-400 dark:text-zinc-500 block uppercase">SaaS License Leak Saved</span>
-                <span className="text-xl sm:text-2xl font-sans font-[800] text-zinc-950 dark:text-white block">
-                  ${stats.saasSaved.toLocaleString()}
-                </span>
-                <span className="text-[10px] font-sans text-zinc-450 dark:text-zinc-500 mt-1 block">
-                  Eliminated redundant SaaS
-                </span>
+              {/* Input 3: Average Order Value */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                    Average Order Value
+                  </label>
+                  <span className="text-sm font-bold px-3 py-1 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-lg border border-zinc-200 dark:border-zinc-800">
+                    {fmt(avgOrderValue)}
+                  </span>
+                </div>
+                <input
+                  id="input-avg-order-value"
+                  type="range"
+                  min="20"
+                  max="500"
+                  step="5"
+                  value={avgOrderValue}
+                  onChange={(e) => setAvgOrderValue(Number(e.target.value))}
+                  className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2"
+                  style={{ accentColor: '#c20a26' }}
+                />
+                <div className="flex justify-between text-[11px] text-zinc-400">
+                  <span>{fmt(20)}</span>
+                  <span>{fmt(500)}</span>
+                </div>
+              </div>
+
+              {/* Input 4: Support Team Size */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                    Support Team Size
+                  </label>
+                  <span className="text-sm font-bold px-3 py-1 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-lg border border-zinc-200 dark:border-zinc-800">
+                    {supportTeamSize} {supportTeamSize === 1 ? 'person' : 'people'}
+                  </span>
+                </div>
+                <input
+                  id="input-support-team-size"
+                  type="range"
+                  min="1"
+                  max="30"
+                  step="1"
+                  value={supportTeamSize}
+                  onChange={(e) => setSupportTeamSize(Number(e.target.value))}
+                  className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2"
+                  style={{ accentColor: '#c20a26' }}
+                />
+                <div className="flex justify-between text-[11px] text-zinc-400">
+                  <span>1</span>
+                  <span>30</span>
+                </div>
+              </div>
+
+              {/* Input 5: Founder Hours Weekly */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                    Founder Hours On Operations Weekly
+                  </label>
+                  <span className="text-sm font-bold px-3 py-1 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-lg border border-zinc-200 dark:border-zinc-800">
+                    {founderHoursWeekly} hrs
+                  </span>
+                </div>
+                <input
+                  id="input-founder-hours"
+                  type="range"
+                  min="1"
+                  max="50"
+                  step="1"
+                  value={founderHoursWeekly}
+                  onChange={(e) => setFounderHoursWeekly(Number(e.target.value))}
+                  className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2"
+                  style={{ accentColor: '#c20a26' }}
+                />
+                <div className="flex justify-between text-[11px] text-zinc-400">
+                  <span>1 hr</span>
+                  <span>50 hrs</span>
+                </div>
               </div>
 
             </div>
 
-            {/* Total impact layout */}
-            <div className="bg-sky-500/5 dark:bg-sky-500/5 border border-sky-500/10 p-5 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="space-y-1">
-                <span className="text-xs font-sans text-sky-500 font-bold block uppercase tracking-wider">Estimated Monthly Profit Gain</span>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Total operational optimization across customer touchpoints.</p>
-              </div>
-              <div className="text-3xl sm:text-4xl font-sans font-[900] text-sky-500 self-start sm:self-center">
-                ${stats.totalImpact.toLocaleString()}
-                <span className="text-xs font-sans font-medium text-sky-400/80 ml-1">/mo</span>
-              </div>
-            </div>
+            {/* Right: Output Cards */}
+            <div className="lg:col-span-7 space-y-5">
 
-            {/* Bottom consult button */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-zinc-200 dark:border-zinc-900 pt-4">
-              <span className="text-[10px] font-sans text-zinc-400">Values are modular and scale based on audit specifications.</span>
-              <button 
-                id="btn-why-roi-consult"
-                onClick={onOpenConsult}
-                className="w-full sm:w-auto px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-zinc-950 font-bold rounded-lg text-xs uppercase flex items-center justify-center gap-1.5 transition-all text-center self-stretch"
+              {/* Output Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Support Hours Saved */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl space-y-3"
+                >
+                  <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+                    Support Hours Saved
+                  </p>
+                  <div className="text-3xl font-extrabold text-zinc-900 dark:text-white">
+                    {impact.supportHoursSaved} <span className="text-lg font-medium text-zinc-400">hrs/month</span>
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Less time spent answering repetitive customer questions.
+                  </p>
+                </motion.div>
+
+                {/* Founder Time Recovered */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl space-y-3"
+                >
+                  <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+                    Founder Time Recovered
+                  </p>
+                  <div className="text-3xl font-extrabold text-zinc-900 dark:text-white">
+                    {impact.founderTimeRecovered} <span className="text-lg font-medium text-zinc-400">hrs/month</span>
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Time redirected toward growth instead of operations.
+                  </p>
+                </motion.div>
+
+                {/* Potential Cart Recovery */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                  className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl space-y-3"
+                >
+                  <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+                    Potential Cart Recovery
+                  </p>
+                  <div className="text-3xl font-extrabold text-zinc-900 dark:text-white">
+                    {fmt(impact.cartRecoveryRevenue)} <span className="text-lg font-medium text-zinc-400">/mo</span>
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Estimated revenue recovered from customers who almost purchased.
+                  </p>
+                </motion.div>
+
+                {/* Hiring Delayed */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.3 }}
+                  className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl space-y-3"
+                >
+                  <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+                    Hiring Delayed
+                  </p>
+                  <div className="text-3xl font-extrabold text-zinc-900 dark:text-white">
+                    {impact.hiringDelayed} {impact.hiringDelayed === 1 ? 'Support Hire' : 'Support Hires'}
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Additional workload absorbed without immediately increasing headcount.
+                  </p>
+                </motion.div>
+              </div>
+
+              {/* Summary Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.4 }}
+                className="bg-zinc-950 dark:bg-zinc-950 border border-zinc-900 p-8 rounded-2xl space-y-6"
               >
-                <span>Deploy This System</span>
-                <ArrowRight size={12} />
-              </button>
+                <div>
+                  <p className="text-xs font-bold text-rose-400 uppercase tracking-widest mb-2">
+                    Monthly Operational Impact
+                  </p>
+                  <div className="flex flex-wrap gap-6">
+                    <div>
+                      <p className="text-2xl font-extrabold text-white">
+                        {impact.totalHoursRecovered} <span className="text-base font-medium text-zinc-400">hrs recovered</span>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-extrabold text-white">
+                        {impact.founderTimeRecovered} <span className="text-base font-medium text-zinc-400">hrs founder time</span>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-extrabold text-white">
+                        {fmt(impact.cartRecoveryRevenue)} <span className="text-base font-medium text-zinc-400">recovered</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  id="btn-why-impact-consult"
+                  onClick={() => window.open('https://calendly.com/mavzenai/30min', '_blank')}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold uppercase tracking-wider transition-all active:scale-[0.98]"
+                >
+                  <span>Get Started</span>
+                  <ArrowRight size={14} />
+                </button>
+              </motion.div>
+
             </div>
-
           </div>
-
         </div>
-      </div>
+      </motion.div>
 
     </div>
   );

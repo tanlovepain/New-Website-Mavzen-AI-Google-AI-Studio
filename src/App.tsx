@@ -1,17 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { 
-  ArrowRight, Check, Globe, Sun, Moon, Briefcase, Sparkles, Database, Sliders, Shield, Lock, Eye, Instagram, Twitter, Linkedin
+  ArrowRight, Sun, Moon, Globe, Shield, Lock, Eye, Instagram, Twitter, Linkedin
 } from 'lucide-react';
 
 import Logo from './components/Logo';
 import ConsultModal from './components/ConsultModal';
-
-type ThemeMode = 'light' | 'dark';
-const ThemeContext = React.createContext<{ theme: ThemeMode; toggleTheme: () => void }>({
-  theme: 'dark',
-  toggleTheme: () => {},
-});
+import CTABottom from './components/CTABottom';
 import DashboardMockup from './components/DashboardMockup';
 import SystemsSection from './components/SystemsSection';
 import ClientResults from './components/ClientResults';
@@ -21,6 +16,19 @@ import WhyMavzenPage from './components/WhyMavzenPage';
 import ProcessPage from './components/ProcessPage';
 import AboutPage from './components/AboutPage';
 import { METRICS } from './data';
+
+type ThemeMode = 'light' | 'dark';
+const ThemeContext = React.createContext<{ theme: ThemeMode; toggleTheme: () => void }>({
+  theme: 'dark',
+  toggleTheme: () => {},
+});
+
+const SectionDivider = () => (
+  <div className="relative w-full h-[1px] bg-zinc-200/40 dark:bg-white/[0.03] my-10 sm:my-16 pointer-events-none flex items-center justify-center">
+    <div className="absolute w-2 h-2 rotate-45 border border-zinc-300 dark:border-white/10 bg-zinc-100 dark:bg-[#09090b]" />
+  </div>
+);
+
 
 export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -111,10 +119,9 @@ export default function App() {
       
       {/* Scroll Progress Bar - Top Edge */}
       <div
-        className="fixed top-0 left-0 h-[3px] bg-[#c20a26] z-50 transition-all duration-150 ease-out"
+        className="fixed top-0 left-0 h-[1px] bg-[#c20a26] z-50 transition-all duration-150 ease-out"
         style={{
-          width: `${scrollProgress}%`,
-          boxShadow: scrollProgress > 0 ? '0 0 12px rgba(194, 10, 38, 0.4)' : 'none'
+          width: `${scrollProgress}%`
         }}
       />
       
@@ -166,7 +173,7 @@ export default function App() {
             {/* Start the Consult Button (White fill on both light and dark theme) */}
             <button
               id="header-btn-consult"
-              onClick={() => setIsConsultOpen(true)}
+              onClick={() => window.open('https://calendly.com/mavzenai/30min', '_blank')}
               className="hidden sm:inline-flex items-center justify-center text-[11px] tracking-wide font-semibold px-4.5 py-2 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-white text-white dark:text-zinc-950 dark:hover:bg-zinc-100 transition-all duration-200"
             >
               Start the Consult
@@ -181,70 +188,48 @@ export default function App() {
               Access Catalog
             </button>
 
-            {/* Premium Theme Switcher Sliding Toggle */}
-            <button
-              id="header-btn-theme-toggle"
-              onClick={toggleTheme}
-              className="relative inline-flex items-center justify-between w-16 h-8 px-1 rounded-full border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900/60 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all duration-300"
-              title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-            >
-              {/* Sliding Background Indicator */}
-              <div
-                className={`absolute top-1 bottom-1 w-6 bg-white dark:bg-zinc-800 rounded-full shadow-sm transition-all duration-300 ease-out ${
-                  theme === 'dark' ? 'left-1' : 'left-9'
-                }`}
-              />
-              
-              {/* Icons Container */}
-              <div className="relative w-full h-full flex items-center justify-between px-2 z-10">
-                {/* Sun Icon (Light Mode) */}
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <Sun
-                    size={18}
-                    className={`transition-all duration-300 ${
-                      theme === 'light'
-                        ? 'text-amber-500 opacity-100 scale-110'
-                        : 'text-zinc-400 opacity-40 scale-100'
-                    }`}
-                  />
-                </div>
-                
-                {/* Moon Icon (Dark Mode) */}
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <Moon
-                    size={18}
-                    className={`transition-all duration-300 ${
-                      theme === 'dark'
-                        ? 'text-blue-400 opacity-100 scale-110'
-                        : 'text-zinc-500 opacity-40 scale-100'
-                    }`}
-                  />
-                </div>
-              </div>
-            </button>
           </div>
         </div>
       </header>
 
-      {/* Subtle metallic gray glow orbs to prevent unrequested red/purple gradients */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-250px] left-1/3 w-[500px] h-[500px] rounded-full bg-zinc-800/10 dark:bg-zinc-900/5 blur-[130px]" />
-        <div className="absolute top-[-150px] right-1/3 w-[400px] h-[400px] rounded-full bg-zinc-800/5 dark:bg-zinc-900/3 blur-[120px]" />
-      </div>
+      {/* Glowing orbs and red gradient from top */}
+      {(currentPage === 'home' || currentPage === 'systems') && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[800px] pointer-events-none overflow-hidden z-0">
+          <div className="absolute top-[-250px] left-1/3 w-[500px] h-[500px] rounded-full bg-zinc-800/10 dark:bg-zinc-900/5 blur-[130px]" />
+          <div className="absolute top-[-150px] right-1/3 w-[400px] h-[400px] rounded-full bg-zinc-800/5 dark:bg-zinc-900/3 blur-[120px]" />
+          {/* Subtle red gradient coming from the top for 3D look */}
+          <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-[#c20a26]/10 dark:bg-[#c20a26]/10 blur-[140px] pointer-events-none" />
+        </div>
+      )}
+
+      {/* Grid Pattern and Center Subdivision Axis Line replicating OperatorOS */}
+      <div className="absolute inset-0 grid-lens-pattern opacity-40 dark:opacity-55 pointer-events-none z-0" />
+      {(currentPage === 'home' || currentPage === 'systems') && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[1px] bg-zinc-200/40 dark:bg-white/[0.03] pointer-events-none z-0" />
+      )}
 
       {/* 2. MAIN APP CONTENT CONTAINER */}
-      <main className="relative z-10 pt-28 sm:pt-32 pb-20">
+      <main className="relative z-10 pt-24 sm:pt-28 pb-20">
 
         {currentPage === 'systems' && (
-          <SystemsPage onOpenConsult={() => setIsConsultOpen(true)} />
+          <>
+            <SystemsPage onOpenConsult={() => setIsConsultOpen(true)} />
+            <CTABottom page="systems" />
+          </>
         )}
 
         {currentPage === 'why-mavzen' && (
-          <WhyMavzenPage onOpenConsult={() => setIsConsultOpen(true)} />
+          <>
+            <WhyMavzenPage onOpenConsult={() => setIsConsultOpen(true)} />
+            <CTABottom page="why-mavzen" />
+          </>
         )}
 
         {currentPage === 'process' && (
-          <ProcessPage onOpenConsult={() => setIsConsultOpen(true)} />
+          <>
+            <ProcessPage onOpenConsult={() => setIsConsultOpen(true)} />
+            <CTABottom page="process" />
+          </>
         )}
 
         {currentPage === 'about' && (
@@ -253,238 +238,309 @@ export default function App() {
 
         {currentPage === 'home' && (
           <>
-            {/* ================= HERO SECTION ================= */}
-            <section id="hero" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 pb-12 sm:pb-24 pt-4 relative">
-          
-          {/* Header pill-badge matching screenshots exactly */}
-          <div className="inline-flex items-center justify-center z-10 relative">
-            <button
-              id="hero-badge-consult"
-              onClick={() => setIsConsultOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-900/80 bg-zinc-50/50 dark:bg-zinc-950/40 hover:bg-zinc-100 hover:dark:bg-zinc-900/30 text-[11px] font-sans font-medium text-zinc-650 dark:text-zinc-350 tracking-tight transition-all duration-300"
+            <section id="hero" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pb-8 sm:pb-12 pt-4 relative z-10 min-h-[550px] flex flex-col justify-center">
+          <motion.div
+            className="flex flex-col items-center justify-center w-full"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+          >
+            {/* Badge */}
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16,1,0.3,1] } } }}
+              className="inline-flex items-center justify-center mb-8"
             >
-              <Globe size={11.5} className="text-zinc-400 dark:text-zinc-500" />
-              <span>A.I. Systems Consulting</span>
-              <span className="text-[9px] text-zinc-400 dark:text-zinc-600 ml-0.5">➔</span>
-            </button>
-          </div>
+              <button
+                id="hero-badge-consult"
+                onClick={() => window.open('https://calendly.com/mavzenai/30min', '_blank')}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-zinc-200/50 dark:border-zinc-700/50 bg-zinc-50/50 dark:bg-[#111111] hover:bg-zinc-100 hover:dark:bg-[#1a1a1a] text-[12px] font-sans font-medium text-zinc-600 dark:text-zinc-300 tracking-tight transition-all duration-300 shadow-sm"
+              >
+                <Globe size={12} className="text-zinc-400 dark:text-zinc-500" />
+                <span>A.I. Systems Consulting</span>
+                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 ml-0.5">›</span>
+              </button>
+            </motion.div>
 
-          {/* Master Display Heading reverting to original Sentence Case Outfit typography */}
-          <div className="max-w-4xl mx-auto space-y-4 z-10 relative">
-            <h1 className="font-sans text-4xl sm:text-[4.25rem] md:text-[4.75rem] lg:text-[5.25rem] font-extrabold tracking-[-0.035em] text-zinc-950 dark:text-white leading-[1.02] select-none">
-              AI Infrastructure That Makes <br />
-              <span className="text-[#c20a26]">D2C Brands More Profitable</span>
-            </h1>
-          </div>
-
-          <p className="max-w-2xl mx-auto text-base sm:text-lg text-zinc-500 dark:text-zinc-400 font-sans font-medium tracking-tight leading-relaxed z-10 relative">
-            Automate support, retention, and operations to increase revenue, reduce costs, and scale without adding headcount.
-          </p>
-
-          {/* Action Call-to-action Triggers exactly as OperatorOS */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 z-10 relative">
-            <button
-              id="hero-btn-consult-main"
-              onClick={() => setIsConsultOpen(true)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-[#c20a26] hover:bg-[#a50920] text-white font-semibold rounded-md px-7 py-3 text-xs tracking-wider uppercase transition-all duration-200 active:scale-98"
+            {/* Heading */}
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16,1,0.3,1] } } }}
+              className="max-w-5xl mx-auto mb-7 w-full px-4"
             >
-              Start the Consult
-              <span className="text-xs">➔</span>
-            </button>
-            <button
-              id="hero-btn-see-build"
-              onClick={() => scrollToSection('features')}
-              className="w-full sm:w-auto inline-flex items-center justify-center bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold rounded-md px-7 py-3 text-xs tracking-wider uppercase transition-all duration-200"
+              <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-[68px] font-bold tracking-tight text-zinc-950 dark:text-white leading-[1.05] select-none text-center mx-auto">
+                We Design, Build, and Deploy
+                <br />
+                <span className="text-[#c20a26]">AI Systems You Own</span>
+              </h1>
+            </motion.div>
+
+            {/* Subheading */}
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.16,1,0.3,1] } } }}
+              className="flex flex-col items-center gap-3 mb-12"
             >
-              See What We Build
-            </button>
-          </div>
+              <h3 className="text-lg sm:text-[20px] font-medium text-zinc-800 dark:text-zinc-200">
+                A.I. Systems Consulting & Build
+              </h3>
+              <p className="max-w-2xl mx-auto text-[15px] sm:text-[16px] text-zinc-500 dark:text-zinc-400 font-sans leading-relaxed text-center px-4">
+                We architect your AI system, ship it inside your environment, and hand you the keys.
+                <br className="hidden sm:block" />
+                One multi-phase engagement.
+              </p>
+            </motion.div>
+
+            {/* CTAs */}
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16,1,0.3,1] } } }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
+              <button
+                id="hero-btn-consult-main"
+                onClick={() => window.open('https://calendly.com/mavzenai/30min', '_blank')}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#c20a26] hover:bg-[#a50920] text-white font-semibold rounded-lg px-7 py-3 text-[15px] tracking-wide transition-all duration-200 active:scale-98 shadow-lg shadow-rose-900/20"
+              >
+                Start the Consult
+                <ArrowRight size={16} strokeWidth={2.5} className="ml-0.5" />
+              </button>
+              <button
+                id="hero-btn-see-build"
+                onClick={() => scrollToSection('features')}
+                className="w-full sm:w-auto inline-flex items-center justify-center bg-transparent dark:bg-[#111111] hover:bg-zinc-100 dark:hover:bg-[#1a1a1a] border border-zinc-200 dark:border-[#222222] text-zinc-700 dark:text-zinc-200 font-semibold rounded-lg px-7 py-3 text-[15px] tracking-wide transition-all duration-200"
+              >
+                See What We Build
+              </button>
+            </motion.div>
+          </motion.div>
         </section>
 
         {/* ================= DASHBOARD MOCKUP ANCHOR ================= */}
-        <section id="dashboard" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 sm:pb-28">
-          <DashboardMockup />
+        <section id="dashboard" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 sm:pb-16 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <DashboardMockup />
+          </motion.div>
         </section>
+
+        <SectionDivider />
 
         {/* ================= INTERACTIVE ARCHITECTURE VISUALIZATION ================= */}
-        <section id="architecture-viz-showcase" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 sm:pb-28">
-          <div className="text-center space-y-3 mb-10">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-[800] tracking-[-0.03em] text-zinc-950 dark:text-white">
+        <section id="architecture-viz-showcase" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center space-y-4 mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-extrabold tracking-[-0.03em] text-zinc-950 dark:text-white">
               Vesper D2C Operating System
             </h2>
-            <p className="max-w-xl mx-auto text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-              Simulate live AI automation controlling a luxury fashion brand in real time. Choose an engine below to start the pipeline sequence.
+            <p className="max-w-xl mx-auto text-sm text-zinc-500 dark:text-zinc-400">
+              Simulate live AI automation controlling a luxury fashion brand in real time.
             </p>
-          </div>
-          <ArchitectureViz />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+          >
+            <ArchitectureViz />
+          </motion.div>
         </section>
 
-        {/* ================= INTEGRATIONS MULTI-ROW MARQUEE ================= */}
-        <section id="integrations" className="border-y border-zinc-200/50 dark:border-zinc-900/60 bg-zinc-50/45 dark:bg-zinc-950/20 py-16 overflow-hidden relative">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 text-center">
-            <h2 className="text-3xl sm:text-4xl font-sans font-[800] mt-3 text-zinc-900 dark:text-white tracking-[-0.02em]">
-              The Connectors We Build For You
-            </h2>
-            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-lg mx-auto leading-relaxed">
-              Ecommerce checkouts, customer email flows, WhatsApp responders, and CRM statuses. Your entire marketing and GTM stack synced natively with absolute custody.
-            </p>
-          </div>
+        <SectionDivider />
 
-          <div className="space-y-5 relative before:absolute before:left-0 before:top-0 before:bottom-0 before:w-24 before:bg-linear-to-r before:from-zinc-50/45 dark:before:from-[#040405] before:to-transparent before:z-10 after:absolute after:right-0 after:top-0 after:bottom-0 after:w-24 after:bg-linear-to-l after:from-zinc-50/45 dark:after:from-[#040405] after:to-transparent after:z-10">
-            {/* Row 1: Forward Marquee */}
-            <div className="flex w-full select-none overflow-hidden h-fit">
-              <div className="flex gap-4 items-center animate-marquee-forward whitespace-nowrap">
-                {[
-                  { name: 'Shopify', icon: '🛍️', desc: 'Orders & inventory' },
-                  { name: 'Klaviyo', icon: '✉️', desc: 'Customer flows' },
-                  { name: 'WhatsApp', icon: '💬', desc: 'Direct engagement' },
-                  { name: 'Stripe', icon: '💳', desc: 'Payment capturing' },
-                  { name: 'Gorgias', icon: '🎧', desc: 'Support sync' },
-                  { name: 'QuickBooks', icon: '📊', desc: 'Auto reconciliation' },
-                  { name: 'HubSpot', icon: '🔥', desc: 'Deal pipelines' }
-                ].concat([
-                  { name: 'Shopify', icon: '🛍️', desc: 'Orders & inventory' },
-                  { name: 'Klaviyo', icon: '✉️', desc: 'Customer flows' },
-                  { name: 'WhatsApp', icon: '💬', desc: 'Direct engagement' },
-                  { name: 'Stripe', icon: '💳', desc: 'Payment capturing' },
-                  { name: 'Gorgias', icon: '🎧', desc: 'Support sync' },
-                  { name: 'QuickBooks', icon: '📊', desc: 'Auto reconciliation' },
-                  { name: 'HubSpot', icon: '🔥', desc: 'Deal pipelines' }
-                ]).map((tool, idx) => (
-                  <div
-                    key={`row1-${tool.name}-${idx}`}
-                    className="inline-flex items-center gap-3.5 px-5 py-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-900/80 rounded-2xl hover:border-zinc-300 dark:hover:border-zinc-800 transition-all duration-300 shadow-xs cursor-pointer hover:-translate-y-0.5"
-                  >
-                    <span className="text-xl shrink-0">{tool.icon}</span>
-                    <div className="flex flex-col text-left">
-                      <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 font-sans leading-none">
-                        {tool.name}
-                      </span>
-                      <span className="text-[9px] font-sans text-zinc-400 dark:text-zinc-500 mt-1 uppercase tracking-wider leading-none">
-                        {tool.desc}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        {/* ================= INTEGRATIONS — OperatorOS Style ================= */}
+        <section id="integrations" className="py-10 sm:py-16 overflow-hidden relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-16 max-w-3xl"
+            >
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-sans font-extrabold tracking-[-0.04em] text-zinc-950 dark:text-white leading-[1.06]">
+                Works with the tools
+                <br />
+                <span className="text-zinc-400 dark:text-zinc-500">you already use.</span>
+              </h2>
+              <p className="mt-5 text-base sm:text-lg text-zinc-500 dark:text-zinc-400 max-w-xl leading-relaxed">
+                CRMs, email, messaging, support, and ecommerce — your existing stack wired into one coherent system.
+              </p>
+            </motion.div>
 
-            {/* Row 2: Backward Marquee */}
-            <div className="flex w-full select-none overflow-hidden h-fit">
-              <div className="flex gap-4 items-center animate-marquee-backward whitespace-nowrap">
-                {[
-                  { name: 'TikTok Ads', icon: '🎵', desc: 'Lead generation' },
-                  { name: 'Meta Shop', icon: '👥', desc: 'Social commerce' },
-                  { name: 'Google Sheets', icon: '📈', desc: 'Data archiving' },
-                  { name: 'Gmail', icon: '📧', desc: 'VIP correspondence' },
-                  { name: 'Notion', icon: '📝', desc: 'Wiki & repository' },
-                  { name: 'ShipStation', icon: '📦', desc: 'Shipping logistics' },
-                  { name: 'Recharge', icon: '🔄', desc: 'Subscription flows' }
-                ].concat([
-                  { name: 'TikTok Ads', icon: '🎵', desc: 'Lead generation' },
-                  { name: 'Meta Shop', icon: '👥', desc: 'Social commerce' },
-                  { name: 'Google Sheets', icon: '📈', desc: 'Data archiving' },
-                  { name: 'Gmail', icon: '📧', desc: 'VIP correspondence' },
-                  { name: 'Notion', icon: '📝', desc: 'Wiki & repository' },
-                  { name: 'ShipStation', icon: '📦', desc: 'Shipping logistics' },
-                  { name: 'Recharge', icon: '🔄', desc: 'Subscription flows' }
-                ]).map((tool, idx) => (
-                  <div
-                    key={`row2-${tool.name}-${idx}`}
-                    className="inline-flex items-center gap-3.5 px-5 py-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-900/80 rounded-2xl hover:border-zinc-300 dark:hover:border-zinc-800 transition-all duration-300 shadow-xs cursor-pointer hover:-translate-y-0.5"
-                  >
-                    <span className="text-xl shrink-0">{tool.icon}</span>
-                    <div className="flex flex-col text-left">
-                      <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 font-sans leading-none">
-                        {tool.name}
-                      </span>
-                      <span className="text-[9px] font-sans text-zinc-400 dark:text-zinc-500 mt-1 uppercase tracking-wider leading-none">
-                        {tool.desc}
-                      </span>
-                    </div>
+            {/* Integration grid */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+            >
+              {[
+                { name: 'Shopify', emoji: '🛍️', color: 'bg-emerald-500/10 dark:bg-emerald-500/10', border: 'border-emerald-500/20', cat: 'Ecommerce' },
+                { name: 'Klaviyo', emoji: '✉️', color: 'bg-yellow-500/10 dark:bg-yellow-500/10', border: 'border-yellow-500/20', cat: 'Email' },
+                { name: 'WhatsApp', emoji: '💬', color: 'bg-green-500/10 dark:bg-green-500/10', border: 'border-green-500/20', cat: 'Messaging' },
+                { name: 'Stripe', emoji: '💳', color: 'bg-indigo-500/10 dark:bg-indigo-500/10', border: 'border-indigo-500/20', cat: 'Payments' },
+                { name: 'Gorgias', emoji: '🎧', color: 'bg-blue-500/10 dark:bg-blue-500/10', border: 'border-blue-500/20', cat: 'Support' },
+                { name: 'HubSpot', emoji: '🔥', color: 'bg-orange-500/10 dark:bg-orange-500/10', border: 'border-orange-500/20', cat: 'CRM' },
+                { name: 'Meta Ads', emoji: '👥', color: 'bg-blue-600/10 dark:bg-blue-600/10', border: 'border-blue-600/20', cat: 'Ads' },
+                { name: 'TikTok', emoji: '🎵', color: 'bg-pink-500/10 dark:bg-pink-500/10', border: 'border-pink-500/20', cat: 'Ads' },
+                { name: 'Google Ads', emoji: '📈', color: 'bg-red-500/10 dark:bg-red-500/10', border: 'border-red-500/20', cat: 'Ads' },
+                { name: 'Notion', emoji: '📝', color: 'bg-zinc-500/10 dark:bg-zinc-500/10', border: 'border-zinc-500/20', cat: 'Productivity' },
+                { name: 'ShipStation', emoji: '📦', color: 'bg-cyan-500/10 dark:bg-cyan-500/10', border: 'border-cyan-500/20', cat: 'Logistics' },
+                { name: 'Recharge', emoji: '🔄', color: 'bg-violet-500/10 dark:bg-violet-500/10', border: 'border-violet-500/20', cat: 'Subscriptions' },
+                { name: 'QuickBooks', emoji: '📊', color: 'bg-teal-500/10 dark:bg-teal-500/10', border: 'border-teal-500/20', cat: 'Finance' },
+                { name: 'Gmail', emoji: '📧', color: 'bg-red-400/10 dark:bg-red-400/10', border: 'border-red-400/20', cat: 'Email' },
+                { name: 'Slack', emoji: '⚡', color: 'bg-purple-500/10 dark:bg-purple-500/10', border: 'border-purple-500/20', cat: 'Comms' },
+              ].map((tool, idx) => (
+                <motion.div
+                  key={tool.name}
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: idx * 0.03 }}
+                  className={`group flex flex-col items-center gap-3 p-5 rounded-2xl border ${tool.border} ${tool.color} hover:scale-105 transition-all duration-200 cursor-default`}
+                >
+                  <span className="text-3xl">{tool.emoji}</span>
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 leading-none">{tool.name}</p>
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-500 mt-1 uppercase tracking-wide">{tool.cat}</p>
                   </div>
-                ))}
-              </div>
-            </div>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* Subtle bottom note */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mt-10 text-xs text-zinc-400 dark:text-zinc-600"
+            >
+              + many more integrations built to your specific stack during onboarding
+            </motion.p>
           </div>
         </section>
+
+        <SectionDivider />
 
         {/* ================= THE FIVE SYSTEMS SECTION ================= */}
-        <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
-          <div className="text-center space-y-3 mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-[800] tracking-[-0.03em] text-zinc-950 dark:text-white lg:whitespace-nowrap">
+        <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 relative z-10">
+          <motion.div
+            className="text-center space-y-4 mb-14 sm:mb-20"
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-sans font-extrabold tracking-[-0.04em] text-zinc-950 dark:text-white">
               Five systems. One operating layer.
             </h2>
-            <p className="max-w-xl mx-auto text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            <p className="max-w-xl mx-auto text-sm sm:text-base text-zinc-500 dark:text-zinc-400 leading-relaxed">
               The systems we ship compose your go-to-market and internal operations. Custom-built, deployed in your secure cloud environment, fully owned by you from day one.
             </p>
-          </div>
+          </motion.div>
 
           <SystemsSection />
         </section>
 
+        <SectionDivider />
+
         {/* ================= BY THE NUMBERS ACCENTS ================= */}
-        <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
-          <div className="text-center space-y-3 mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-[800] tracking-[-0.03em] text-zinc-950 dark:text-white lg:whitespace-nowrap">
+        <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 relative z-10">
+          <motion.div
+            className="text-center space-y-4 mb-16"
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-sans font-extrabold tracking-[-0.04em] text-zinc-950 dark:text-white">
               Built for results, not promises
             </h2>
-            <p className="max-w-lg mx-auto text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="max-w-lg mx-auto text-sm text-zinc-500 dark:text-zinc-400">
               Every metric is a commitment. Every number is something we deliver on, project after project.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {METRICS.map((metric) => (
-              <div
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {METRICS.map((metric, i) => (
+              <motion.div
                 key={metric.id}
-                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-900/60 p-6 sm:p-8 rounded-2xl hover:border-zinc-300 dark:hover:border-zinc-800 transition-all duration-350"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: i * 0.08 }}
+                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-900/60 p-7 sm:p-9 rounded-2xl hover:border-zinc-300 dark:hover:border-zinc-800 hover:-translate-y-0.5 transition-all duration-300 group"
               >
                 <div className="flex items-center gap-2 text-zinc-400">
                   <span className={`w-2 h-2 rounded-full ${metric.accentColor === 'red' ? 'bg-rose-500' : 'bg-indigo-500'}`} />
-                  <span className="text-[10px] font-sans uppercase tracking-wider">{metric.label}</span>
+                  <span className="text-[11px] font-sans uppercase tracking-widest">{metric.label}</span>
                 </div>
-                <div className="text-4xl sm:text-5xl font-display font-bold mt-4 tracking-tight">
+                <div className="text-5xl sm:text-6xl font-display font-extrabold mt-5 tracking-tight">
                   {metric.value}
-                  <span className={`text-lg font-sans font-normal ml-0.5 ${metric.accentColor === 'red' ? 'text-rose-500' : 'text-indigo-400'}`}>
+                  <span className={`text-xl font-sans font-normal ml-1 ${metric.accentColor === 'red' ? 'text-rose-500' : 'text-indigo-400'}`}>
                     {metric.suffix}
                   </span>
                 </div>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-3 leading-relaxed">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-4 leading-relaxed">
                   {metric.description}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </section>
 
-        {/* ================= CLIENT RESULTS SLIDERS ================= */}
-        <section id="results" className="bg-zinc-50/50 dark:bg-zinc-950/20 border-y border-[#e4e4e7]/40 dark:border-[#18181b]/50 py-20 sm:py-28">
+        <SectionDivider />
+
+        {/* ================= CLIENT RESULTS ================= */}
+        <section id="results" className="py-10 sm:py-16 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center space-y-3 mb-16">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-[800] tracking-[-0.03em] text-zinc-950 dark:text-white lg:whitespace-nowrap">
+            <motion.div
+              className="text-center space-y-4 mb-16"
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-sans font-extrabold tracking-[-0.04em] text-zinc-950 dark:text-white">
                 Results Brands Are Getting
               </h2>
-              <p className="max-w-xl mx-auto text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="max-w-xl mx-auto text-sm text-zinc-500 dark:text-zinc-400">
                 Actual outcomes from D2C brands improving operations, saving founder time, and building smoother, more consistent execution systems.
               </p>
-            </div>
+            </motion.div>
 
             <ClientResults onOpenConsult={() => setIsConsultOpen(true)} />
           </div>
         </section>
 
+        <SectionDivider />
+
         {/* ================= TRUST BENTO GRID ================= */}
-        <section id="trust" className="bg-zinc-50/50 dark:bg-zinc-950/20 border-y border-zinc-200/50 dark:border-zinc-900/60 py-20 sm:py-28">
+        <section id="trust" className="py-10 sm:py-16 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center space-y-3 mb-16">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-[800] tracking-[-0.03em] text-zinc-950 dark:text-white lg:whitespace-nowrap">
+            <motion.div
+              className="text-center space-y-4 mb-16"
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-sans font-extrabold tracking-[-0.04em] text-zinc-950 dark:text-white">
                 Built to be handed off
               </h2>
-              <p className="max-w-xl mx-auto text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="max-w-xl mx-auto text-sm text-zinc-500 dark:text-zinc-400">
                 We build in your environment. You own the code, the data, and every account.
               </p>
-            </div>
+            </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
@@ -494,29 +550,33 @@ export default function App() {
               ].map((tr, idx) => {
                 const IconComp = tr.icon;
                 return (
-                  <div
+                  <motion.div
                     key={idx}
-                    className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-900 p-6 sm:p-8 rounded-2xl flex flex-col justify-between h-56 hover:border-zinc-300 dark:hover:border-zinc-850 hover:shadow-xs transition-colors duration-250"
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: idx * 0.1 }}
+                    className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-900 p-8 sm:p-10 rounded-2xl flex flex-col justify-between gap-8 hover:border-zinc-300 dark:hover:border-zinc-800 hover:-translate-y-0.5 transition-all duration-300"
                   >
-                    <div className="p-2.5 bg-rose-550/5 text-rose-500 rounded-lg w-10 h-10 flex items-center justify-center">
-                      <IconComp size={18} />
+                    <div className="p-3 bg-rose-500/8 text-rose-500 rounded-xl w-12 h-12 flex items-center justify-center">
+                      <IconComp size={20} />
                     </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                    <div className="space-y-2">
+                      <h4 className="text-base font-bold text-zinc-800 dark:text-zinc-100">
                         {tr.title}
                       </h4>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-2 leading-relaxed">
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
                         {tr.desc}
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
           </div>
         </section>
 
-
+        <CTABottom page="home" />
           </>
         )}
 

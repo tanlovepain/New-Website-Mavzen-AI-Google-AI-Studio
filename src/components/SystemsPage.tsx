@@ -44,6 +44,12 @@ const SYSTEMS_FAQ_ITEMS = [
   }
 ];
 
+const SectionDivider = () => (
+  <div className="relative w-full h-[1px] bg-zinc-200/40 dark:bg-white/[0.03] my-10 sm:my-16 pointer-events-none flex items-center justify-center">
+    <div className="absolute w-[7px] h-[7px] rotate-45 border border-zinc-300 dark:border-white/10 bg-zinc-100 dark:bg-[#09090b]" />
+  </div>
+);
+
 export default function SystemsPage({ onOpenConsult }: { onOpenConsult: () => void }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -458,7 +464,7 @@ export default function SystemsPage({ onOpenConsult }: { onOpenConsult: () => vo
 
           <button
              id="systems-catalog-start-btn-scope"
-             onClick={onOpenConsult}
+             onClick={() => window.open('https://calendly.com/mavzenai/30min', '_blank')}
              className="w-full py-3 bg-sky-500 hover:bg-sky-600 text-zinc-950 rounded-xl text-xs font-bold uppercase flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
           >
             <span>Request In-house Deployment Audit</span>
@@ -468,8 +474,10 @@ export default function SystemsPage({ onOpenConsult }: { onOpenConsult: () => vo
 
       </div>
 
+      <SectionDivider />
+
       {/* FAQ Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
         <div className="text-center space-y-3 mb-16">
           <h2 className="text-3xl font-display font-extrabold tracking-tighter text-zinc-900 dark:text-white">
             Questions worth asking

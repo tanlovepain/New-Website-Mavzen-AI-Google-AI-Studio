@@ -41,7 +41,6 @@ export default function ClientResults({ onOpenConsult }: ClientResultsProps) {
         <div>
           {/* Active State Indicator */}
           <div className="flex items-center gap-2 mb-6">
-            <span className="h-2 w-2 rounded-full bg-rose-600 animate-pulse" />
           </div>
 
           {/* Animating the Quote Content cleanly */}
@@ -175,7 +174,7 @@ export default function ClientResults({ onOpenConsult }: ClientResultsProps) {
           </h4>
           <button
             id="btn-results-consult"
-            onClick={onOpenConsult}
+            onClick={() => window.open('https://calendly.com/mavzenai/30min', '_blank')}
             className="w-full inline-flex items-center justify-center gap-1.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 rounded-lg px-4 py-2 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all hover:scale-[1.01]"
           >
             Start the Consult
